@@ -1,0 +1,2 @@
+series,relative_day,ATT_hours,mean_actual,mean_synthetic,bootstrap_SE,CI95_lower,CI95_upper,min_duration,n_events,n_clusters,bootstrap_reps,seed
+same,0,0.752337584848838,48.145005506608,47.3926679217591,0.368569046847149,0.0346557324126314,1.44582098239206,1,454,149,1000,2026
