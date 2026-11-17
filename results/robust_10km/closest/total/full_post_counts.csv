@@ -1,2 +1,2 @@
-n_day0_retained,n_full_post_retained,n_excluded_incomplete,n_outside_observation_window,n_missing_target,n_missing_donor
-1777,1530,247,0,0,247
+n_day0_retained,n_full_post_retained,n_excluded_incomplete,n_outside_observation_window,n_missing_target,n_missing_donor,n_partial_events,mean_coverage
+1777,1777,0,0,0,27,27,0.991428735310036

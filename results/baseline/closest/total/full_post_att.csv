@@ -1,2 +1,2 @@
-series,ATT_hours,mean_actual,mean_synthetic,n_events,n_clusters,mean_duration_days,median_duration_days,n_post_event_days,bootstrap_SE,CI95_lower,CI95_upper,bootstrap_reps,seed,aggregation
-total,0.0351678585232764,14.056962265453,14.0217944069298,1404,491,5.43091168091168,2,7625,0.119641494292323,-0.202026412289441,0.263819802358695,1000,2026,equal_weight_event_means
+series,ATT_hours,mean_actual,mean_synthetic,n_events,n_clusters,mean_duration_days,median_duration_days,n_post_event_days,n_possible_post_event_days,mean_coverage,bootstrap_SE,CI95_lower,CI95_upper,bootstrap_reps,seed,aggregation
+total,0.00314782596339507,14.0178527069706,14.0147048810072,1643,515,9.6707242848448,3,14789,15889,0.991785310710885,0.117062887091488,-0.220945666806482,0.236563955466197,1000,2026,equal_weight_available_day_event_means
