@@ -32,7 +32,7 @@
     <p id="placebo-stat" aria-live="polite"></p>
     <div class="panel"><div id="placebo-chart" role="img" aria-label="Placebo ATT distribution with the real ATT shown in red"></div></div>
     <p class="muted">Matched real ATT follows this test’s sample and completeness rules and can differ from the other tabs.</p>
-    <details><summary>How to read this test</summary><p>Gray bars show ATT from randomly assigned disruptions. The red line shows the matched real ATT. For the positive-spillover hypothesis, one-sided empirical p = (1 + number of placebo ATT ≥ real ATT) / (1 + valid rounds). All spillover outcomes, including Same − Different, use this right-tail test. The direction does not change with the observed sign; the placebo distribution is not recentered.</p><p>Day 0 uses duration-eligible events. Disruption-period averages require all disruption days and fixed donor weights. Each common comparison uses the same retained events. These are empirical placebo p-values, not an exact randomization test; no multiple-testing adjustment is applied.</p></details>
+    <details><summary>How to read this test</summary><p>Gray bars show ATT from randomly assigned disruptions. The red line shows the matched real ATT.<br><strong>One-sided p-value</strong> = (1 + number of placebo rounds with ATT ≥ real ATT) / (1 + valid rounds).</p></details>
     <h2>Results by disruption duration</h2>
     <div id="placebo-table" class="table-wrap"></div>
   </div>
