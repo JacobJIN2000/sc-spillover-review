@@ -1,0 +1,6 @@
+min_duration,observation_days,n_start,n_retained,n_excluded,n_clusters
+1,1,828,738,90,281
+2,2,580,516,64,243
+3,3,451,402,49,215
+4,4,369,325,44,188
+5,5,322,286,36,175

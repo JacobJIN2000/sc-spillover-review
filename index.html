@@ -38,7 +38,16 @@
   </div>
 </section>
 
-<section class="tab" id="measure" hidden><h2>Spillover measure · Baseline</h2><p>Earlier complete-window baseline comparison; not yet updated to the available-day rule. Sidebar selections do not change this sample.</p><p id="measure-counts" class="muted"></p><p>Plug: actual use minus its day −5, −4, −3, −2 mean. Station: SC from the original B pool. Other plugs: station − plug. Nearby Same: existing 5 km neighborhood SC.</p><h2>Daily changes · Equal weight per event</h2><div id="measure-att" class="table-wrap"></div><img id="measure-outcome" class="figure" alt="Daily change comparison" loading="lazy"><h2>Shares of cumulative lost plug-hours</h2><p class="muted">Ratios of cumulative changes to cumulative target-plug losses. 95% CIs use 1,000 joint focal-station cluster draws. Other plugs can include concurrent outages. The decomposition combines plug before–after and station/nearby SC.</p><div id="measure-shares" class="table-wrap"></div><img id="measure-share-figure" class="figure" alt="Within-station and nearby same-network shares" loading="lazy"></section></main>
+<section class="tab" id="measure" hidden>
+<h2>Spillover measure · Baseline</h2><p class="muted">Nearby Same · 5 km · Fixed baseline analysis</p>
+<label for="measure-duration">Minimum disruption duration</label><select id="measure-duration"><option value="1">≥1 day · Day 0</option><option value="2">≥2 days · Days 0–1</option><option value="3">≥3 days · Days 0–2</option><option value="4">≥4 days · Days 0–3</option><option value="5">≥5 days · Days 0–4</option></select>
+<p id="measure-counts" class="muted"></p>
+<h2>Average over the selected window</h2><div id="measure-average-chart"></div><div id="measure-att" class="table-wrap"></div>
+<h2>Share of lost plug-hours</h2><div id="measure-share-chart"></div><div id="measure-shares" class="table-wrap"></div>
+<h2>Daily effects</h2><div id="measure-daily-chart"></div>
+<details><summary>Definitions</summary><p>Plug: observed use minus its available pre-day mean (−5, −4, −3, −2). Station and Nearby Same: observed minus synthetic control. Other plugs = station − plug.</p><p>Share = component change ÷ lost plug-hours over the same events and days. This combines before–after and SC measures. 95% CIs use 1,000 joint focal-station cluster bootstrap draws.</p></details>
+<details><summary>All duration windows</summary><img id="measure-outcome" class="figure" alt="Average changes over the first n days" loading="lazy"><img id="measure-share-figure" class="figure" alt="Shares of lost plug-hours over the first n days" loading="lazy"><img id="measure-daily" class="figure" alt="Daily effects for five duration windows" loading="lazy"></details>
+</section></main>
 <script>
 const $=id=>document.getElementById(id);
 const labels={baseline:'Baseline · Driving distance ≤5 km',radius_10km:'Robustness · Driving distance ≤10 km',evgo_only:'Robustness · EVgo focal stations only',straight_line:'Robustness · Straight-line distance ≤5 km',travel_time_20min:'Robustness · Driving time ≤20 min'};
@@ -113,11 +122,32 @@ function renderPlacebo(){
 }
 for(const id of ['placebo-estimand','placebo-duration','placebo-series'])$(id).addEventListener('change',renderPlacebo);
 
-function renderMeasure(){const m=DATA.spillover_measure;if(!m){$('measure-counts').textContent='Results are not yet available.';return}const base='results/baseline/spillover_measure/';$('measure-counts').textContent='Starting events: '+m.n_start+' · Shared retained events: '+m.n_retained+' · Excluded: '+(m.n_start-m.n_retained);const names={plug_change:'Focal plug (before–after)',station_change:'Focal station (SC)',other_plugs_change:'Other plugs (station − plug)',nearby_same_change:'Nearby same network (SC)'};
-table($('measure-att'),m.att.map(r=>({outcome:names[r.outcome],att:fmt(r.ATT_hours),lo:fmt(r.CI95_lower),hi:fmt(r.CI95_upper),events:r.n_events})),[['outcome','Outcome'],['att','Change (hours/day)'],['lo','95% CI lower'],['hi','95% CI upper'],['events','Events']]);
-table($('measure-shares'),m.shares.map(r=>({component:r.component==='within_station'?'Within station':'Nearby same network',share:fmt(r.share_percent),lo:fmt(r.CI95_lower),hi:fmt(r.CI95_upper),invalid:r.n_nonpositive_loss_draws})),[['component','Component'],['share','Share (%)'],['lo','95% CI lower (%)'],['hi','95% CI upper (%)'],['invalid','Nonpositive-loss draws']]);
-$('measure-outcome').src=base+'outcome_comparison.png?v='+m.figures['outcome_comparison.png'];$('measure-share-figure').src=base+'spillover_shares.png?v='+m.figures['spillover_shares.png'];}
+function renderMeasure(){
+const m=DATA.spillover_measure;
+if(!m){$('measure-counts').textContent='Results are not yet available.';return}
+const n=Number($('measure-duration').value||1),c=m.counts.find(r=>Number(r.min_duration)===n);
+const base='results/baseline/spillover_measure/';
+const names={plug_change:'Focal plug',station_change:'Focal station',other_plugs_change:'Other plugs',nearby_same_change:'Nearby same network',within_station:'Within station',nearby_same:'Nearby same network'};
+const colors={plug_change:'#CC6677',station_change:'#4477AA',other_plugs_change:'#228833',nearby_same_change:'#AA3377',within_station:'#228833',nearby_same:'#AA3377'};
+const att=m.duration_att.filter(r=>Number(r.min_duration)===n),shares=m.duration_shares.filter(r=>Number(r.min_duration)===n);
+$('measure-counts').textContent='Days 0–'+(n-1)+' · Shared events: '+c.n_retained+' / '+c.n_start+' · Focal stations: '+c.n_clusters;
+const interval=r=>'['+fmt(r.CI95_lower)+', '+fmt(r.CI95_upper)+']';
+table($('measure-att'),att.map(r=>({outcome:names[r.outcome],att:fmt(r.ATT_hours),ci:interval(r),events:r.n_events})),[['outcome','Outcome'],['att','Change (hours/day)'],['ci','95% CI'],['events','Events']]);
+table($('measure-shares'),shares.map(r=>({component:names[r.component],share:fmt(r.share_percent),ci:interval(r)})),[['component','Component'],['share','Share (%)'],['ci','95% CI']]);
+const errors=(rows,value)=>({type:'data',symmetric:false,array:rows.map(r=>Number(r.CI95_upper)-Number(r[value])),arrayminus:rows.map(r=>Number(r[value])-Number(r.CI95_lower)),visible:true});
+const layout=y=>({height:340,margin:{t:20,r:25,b:65,l:75},paper_bgcolor:'white',plot_bgcolor:'white',font:{family:'system-ui',color:'#183044'},yaxis:{title:y,gridcolor:'#edf1f5',zerolinecolor:'#8793a0'},showlegend:false});
+const options={responsive:true,displaylogo:false};
+Plotly.react('measure-average-chart',[{type:'bar',x:att.map(r=>names[r.outcome]),y:att.map(r=>Number(r.ATT_hours)),marker:{color:att.map(r=>colors[r.outcome])},error_y:errors(att,'ATT_hours'),hovertemplate:'%{x}<br>%{y:.3f} hours/day<extra></extra>'}],layout('Busy hours / day'),options);
+Plotly.react('measure-share-chart',[{type:'bar',x:shares.map(r=>names[r.component]),y:shares.map(r=>Number(r.share_percent)),marker:{color:shares.map(r=>colors[r.component])},error_y:errors(shares,'share_percent'),hovertemplate:'%{x}<br>%{y:.2f}%<extra></extra>'}],layout('Share (%)'),options);
+const traces=Object.keys(colors).filter(k=>k.endsWith('_change')).map(k=>{
+ const rows=m.daily.filter(r=>r.outcome===k&&Number(r.min_duration)===n).sort((a,b)=>a.relative_day-b.relative_day);
+ return {x:rows.map(r=>Number(r.relative_day)),y:rows.map(r=>Number(r.ATT_hours)),name:names[k],mode:'lines+markers',line:{color:colors[k]},error_y:errors(rows,'ATT_hours'),customdata:rows.map(r=>[Number(r.CI95_lower),Number(r.CI95_upper)]),hovertemplate:'Day %{x}<br>%{y:.3f} hours/day<br>95% CI: [%{customdata[0]:.3f}, %{customdata[1]:.3f}]<extra>%{fullData.name}</extra>'};
+});
+Plotly.react('measure-daily-chart',traces,{...layout('Busy hours / day'),height:410,showlegend:true,legend:{orientation:'h',y:1.15},margin:{t:65,r:25,b:60,l:75},xaxis:{title:'Relative day',tickvals:Array.from({length:n},(_,i)=>i),range:[-.3,n-.7]}},options);
+for(const [id,file] of [['measure-outcome','duration_outcome_comparison.png'],['measure-share-figure','duration_spillover_shares.png'],['measure-daily','effect_by_duration.png']])$(id).src=base+file+'?v='+m.figures[file];
+}
+$('measure-duration').addEventListener('change',renderMeasure);
 for(const id of ['scenario','design','outcome'])$(id).addEventListener('change',render);
-for(const b of document.querySelectorAll('nav button'))b.addEventListener('click',()=>{for(const x of document.querySelectorAll('nav button'))x.classList.toggle('active',x===b);for(const t of document.querySelectorAll('.tab'))t.hidden=t.id!==b.dataset.tab;if(b.dataset.tab==='fullpost')Plotly.Plots.resize('average-chart');if(b.dataset.tab==='placebo'&&!$('placebo-content').hidden)Plotly.Plots.resize('placebo-chart');const q=new URLSearchParams(location.hash.slice(1));q.set('tab',b.dataset.tab);history.replaceState(null,'','#'+q)});
+for(const b of document.querySelectorAll('nav button'))b.addEventListener('click',()=>{for(const x of document.querySelectorAll('nav button'))x.classList.toggle('active',x===b);for(const t of document.querySelectorAll('.tab'))t.hidden=t.id!==b.dataset.tab;if(b.dataset.tab==='fullpost')Plotly.Plots.resize('average-chart');if(b.dataset.tab==='measure')for(const id of ['measure-average-chart','measure-share-chart','measure-daily-chart'])Plotly.Plots.resize(id);if(b.dataset.tab==='placebo'&&!$('placebo-content').hidden)Plotly.Plots.resize('placebo-chart');const q=new URLSearchParams(location.hash.slice(1));q.set('tab',b.dataset.tab);history.replaceState(null,'','#'+q)});
 window.addEventListener('DOMContentLoaded',async()=>{try{const response=await fetch('results.json', {cache:'no-store'});if(!response.ok)throw Error('Results could not be loaded.');DATA=await response.json();try{const p=await fetch('placebo.json',{cache:'no-store'});if(p.ok)PLACEBO=await p.json()}catch{}for(const key of Object.keys(DATA.settings.scenarios))$('scenario').add(new Option(labels[key]||key,key));const q=new URLSearchParams(location.hash.slice(1));for(const key of ['scenario','design','outcome'])if([...$(key).options].some(o=>o.value===q.get(key)))$(key).value=q.get(key);render();const tab=[...document.querySelectorAll('nav button')].find(b=>b.dataset.tab===q.get('tab'));if(tab)tab.click()}catch(error){$('error').textContent=error.message}});
 </script></body></html>
