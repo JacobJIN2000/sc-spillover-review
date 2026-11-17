@@ -32,7 +32,7 @@
     <p id="placebo-stat" aria-live="polite"></p>
     <div class="panel"><div id="placebo-chart" role="img" aria-label="Placebo ATT distribution with the real ATT shown in red"></div></div>
     <p class="muted">Matched real ATT follows this test’s sample and completeness rules and can differ from the other tabs.</p>
-    <details><summary>How to read this test</summary><p>Gray bars show ATT from randomly assigned disruptions. The red line shows the matched real ATT. Two-sided empirical p = (1 + number of placebo |ATT| ≥ real |ATT|) / (1 + valid rounds). Values are compared with zero, without recentering the placebo distribution.</p><p>Day 0 uses duration-eligible events. Disruption-period averages require all disruption days and fixed donor weights. Each common comparison uses the same retained events. These are empirical placebo p-values, not an exact randomization test; no multiple-testing adjustment is applied.</p></details>
+    <details><summary>How to read this test</summary><p>Gray bars show ATT from randomly assigned disruptions. The red line shows the matched real ATT. For the positive-spillover hypothesis, one-sided empirical p = (1 + number of placebo ATT ≥ real ATT) / (1 + valid rounds). All spillover outcomes, including Same − Different, use this right-tail test. The direction does not change with the observed sign; the placebo distribution is not recentered.</p><p>Day 0 uses duration-eligible events. Disruption-period averages require all disruption days and fixed donor weights. Each common comparison uses the same retained events. These are empirical placebo p-values, not an exact randomization test; no multiple-testing adjustment is applied.</p></details>
     <h2>Results by disruption duration</h2>
     <div id="placebo-table" class="table-wrap"></div>
   </div>
@@ -70,14 +70,14 @@ function renderPlacebo(){
   const values=PLACEBO.draws[[design,outcome,series,estimand,L].join('/')]||[];
   if(!row || !values.length){$('placebo-empty').hidden=false;$('placebo-content').hidden=true;return}
   const real=Number(row.real_ATT), lo=Math.min(0,real,...values), hi=Math.max(0,real,...values), pad=(hi-lo||1)*.08;
-  $('placebo-stat').textContent='Real ATT: '+fmt(real)+' busy hours/day · Empirical p-value: '+fmt(row.p_value)+' · '+row.n_rounds+' placebo rounds';
+  $('placebo-stat').textContent='Real ATT: '+fmt(real)+' busy hours/day · One-sided p-value: '+fmt(row.p_value)+' · '+row.n_rounds+' placebo rounds';
   Plotly.react('placebo-chart',[{type:'histogram',x:values,nbinsx:16,marker:{color:'#94a3b8',line:{color:'white',width:1}},hovertemplate:'Placebo ATT: %{x:.3f}<br>Rounds: %{y}<extra></extra>'}],{
     height:400,margin:{t:45,r:25,b:65,l:65},paper_bgcolor:'white',plot_bgcolor:'white',font:{family:'system-ui',color:'#183044'},showlegend:false,bargap:.04,
     xaxis:{title:'ATT (busy hours / day)',range:[lo-pad,hi+pad],gridcolor:'#edf1f5'},yaxis:{title:'Placebo rounds',rangemode:'tozero',tickformat:'d',gridcolor:'#edf1f5'},
     shapes:[{type:'line',x0:0,x1:0,y0:0,y1:1,yref:'paper',line:{color:'#aeb9c4',width:1,dash:'dot'}},{type:'line',x0:real,x1:real,y0:0,y1:1,yref:'paper',line:{color:'#c85c3e',width:3}}],
     annotations:[{x:real,y:1,yref:'paper',text:'Real ATT '+fmt(real),showarrow:false,yshift:15,font:{color:'#b34d34'},xanchor:real>(hi+lo)/2?'right':'left'}]
   },{responsive:true,displaylogo:false,toImageButtonOptions:{filename:'placebo-'+design+'-'+outcome+'-'+estimand+'-duration'+L}});
-  const columns=[['duration','Duration'],...(common?[['series','Comparison']]:[]),['real','Real ATT'],['mean','Placebo mean'],['sd','Placebo SD'],['p','p-value'],['rounds','Rounds'],['events','Real events']];
+  const columns=[['duration','Duration'],...(common?[['series','Comparison']]:[]),['real','Real ATT'],['mean','Placebo mean'],['sd','Placebo SD'],['p','One-sided p'],['rounds','Rounds'],['events','Real events']];
   table($('placebo-table'),rows.slice().sort((a,b)=>Number(a.min_duration)-Number(b.min_duration)||a.series.localeCompare(b.series)).map(r=>({duration:'≥'+r.min_duration,series:r.series==='same - different'?'Same − Different':r.series==='same'?'Same':'Different',real:fmt(r.real_ATT),mean:fmt(r.placebo_mean),sd:fmt(r.placebo_SD),p:fmt(r.p_value),rounds:r.n_rounds,events:r.n_real_events})),columns);
 }
 for(const id of ['placebo-estimand','placebo-duration','placebo-series'])$(id).addEventListener('change',renderPlacebo);
