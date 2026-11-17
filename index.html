@@ -139,9 +139,9 @@ const layout=y=>({height:340,margin:{t:20,r:25,b:65,l:75},paper_bgcolor:'white',
 const options={responsive:true,displaylogo:false};
 Plotly.react('measure-average-chart',[{type:'bar',x:att.map(r=>names[r.outcome]),y:att.map(r=>Number(r.ATT_hours)),marker:{color:att.map(r=>colors[r.outcome])},error_y:errors(att,'ATT_hours'),hovertemplate:'%{x}<br>%{y:.3f} hours/day<extra></extra>'}],layout('Busy hours / day'),options);
 Plotly.react('measure-share-chart',[{type:'bar',x:shares.map(r=>names[r.component]),y:shares.map(r=>Number(r.share_percent)),marker:{color:shares.map(r=>colors[r.component])},error_y:errors(shares,'share_percent'),hovertemplate:'%{x}<br>%{y:.2f}%<extra></extra>'}],layout('Share (%)'),options);
-const traces=Object.keys(colors).filter(k=>k.endsWith('_change')).map(k=>{
+const traces=Object.keys(colors).filter(k=>k.endsWith('_change')).map((k,i)=>{
  const rows=m.daily.filter(r=>r.outcome===k&&Number(r.min_duration)===n).sort((a,b)=>a.relative_day-b.relative_day);
- return {x:rows.map(r=>Number(r.relative_day)),y:rows.map(r=>Number(r.ATT_hours)),name:names[k],mode:'lines+markers',line:{color:colors[k]},error_y:errors(rows,'ATT_hours'),customdata:rows.map(r=>[Number(r.CI95_lower),Number(r.CI95_upper)]),hovertemplate:'Day %{x}<br>%{y:.3f} hours/day<br>95% CI: [%{customdata[0]:.3f}, %{customdata[1]:.3f}]<extra>%{fullData.name}</extra>'};
+ return {x:rows.map(r=>Number(r.relative_day)+(i-1.5)*.08),y:rows.map(r=>Number(r.ATT_hours)),name:names[k],mode:'lines+markers',line:{color:colors[k]},error_y:errors(rows,'ATT_hours'),customdata:rows.map(r=>[Number(r.CI95_lower),Number(r.CI95_upper),Number(r.relative_day)]),hovertemplate:'Day %{customdata[2]}<br>%{y:.3f} hours/day<br>95% CI: [%{customdata[0]:.3f}, %{customdata[1]:.3f}]<extra>%{fullData.name}</extra>'};
 });
 Plotly.react('measure-daily-chart',traces,{...layout('Busy hours / day'),height:410,showlegend:true,legend:{orientation:'h',y:1.15},margin:{t:65,r:25,b:60,l:75},xaxis:{title:'Relative day',tickvals:Array.from({length:n},(_,i)=>i),range:[-.3,n-.7]}},options);
 for(const [id,file] of [['measure-outcome','duration_outcome_comparison.png'],['measure-share-figure','duration_spillover_shares.png'],['measure-daily','effect_by_duration.png']])$(id).src=base+file+'?v='+m.figures[file];
